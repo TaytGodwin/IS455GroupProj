@@ -25,7 +25,7 @@ const App = () => {
       }).then((res) => res.json());
 
       // Content-Based Filtering
-      const contentRes = await fetch('http://localhost:8000/recommend-content', {
+      const contentRes = await fetch('http://localhost:5000/recommend-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
