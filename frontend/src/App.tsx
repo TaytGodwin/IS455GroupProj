@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
-
 type ContentRecommendation = {
   similarity: number;
   title: string;
 };
-
 const App = () => {
   const [userId, setUserId] = useState('');
   const [cfRecs, setCfRecs] = useState([]);
@@ -14,27 +12,23 @@ const App = () => {
   const [azureRecs, setAzureRecs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
   const getRecommendations = async () => {
     setLoading(true);
     setError('');
     try {
       const body = { user_id: parseInt(userId) };
-      
       // Collaborative Filtering
       const cfRes = await fetch('http://localhost:8000/recommend-cf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       }).then((res) => res.json());
-
       // Content-Based Filtering
       const contentRes = await fetch('http://localhost:5000/recommend-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       }).then((res) => res.json());
-
       // Azure ML Endpoint
       const azureRes = await fetch('https://YOUR_AZURE_ENDPOINT_URL', {
         method: 'POST',
@@ -44,7 +38,6 @@ const App = () => {
         },
         body: JSON.stringify(body),
       }).then((res) => res.json());
-
       setCfRecs(cfRes);
       setContentRecs(contentRes);
       setAzureRecs(azureRes);
@@ -55,7 +48,6 @@ const App = () => {
       setLoading(false);
     }
   };
-
   return (
     <div>
       <h1>Article Recommendation System</h1>
@@ -69,26 +61,22 @@ const App = () => {
         onClick={getRecommendations}
       >
         Get Recommendations
-
       </button>
       <div>
         {/* Masons section */}
         <h2>Collaborative Filtering</h2>
         <ul>{cfRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
-{/* Maya's  */}
-
+        {/* Maya's  */}
         <h2>Content-Based Filtering</h2>
           <ul>
             {contentRecs.slice(0, 5).map((item, idx) => (
               <li key={idx}>{item.title}</li>
             ))}
           </ul>
-
         <h2>Azure Wide & Deep</h2>
         <ul>{azureRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
       </div>
     </div>
   );
 };
-
 export default App;
