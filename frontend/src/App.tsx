@@ -64,6 +64,8 @@ const App = () => {
       <button className='btn-primary'
         onClick={getRecommendations}
       >
+        Get Recommendations
+
       </button>
       <div>
         <h2>Collaborative Filtering</h2>
