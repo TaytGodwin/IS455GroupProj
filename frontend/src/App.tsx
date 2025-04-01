@@ -2,11 +2,15 @@ import { useState } from 'react';
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+type ContentRecommendation = {
+  similarity: number;
+  title: string;
+};
 
 const App = () => {
   const [userId, setUserId] = useState('');
   const [cfRecs, setCfRecs] = useState([]);
-  const [contentRecs, setContentRecs] = useState([]);
+  const [contentRecs, setContentRecs] = useState<ContentRecommendation[]>([]);
   const [azureRecs, setAzureRecs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -68,11 +72,17 @@ const App = () => {
 
       </button>
       <div>
+        {/* Masons section */}
         <h2>Collaborative Filtering</h2>
         <ul>{cfRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
+{/* Maya's  */}
 
         <h2>Content-Based Filtering</h2>
-        <ul>{contentRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
+          <ul>
+            {contentRecs.slice(0, 5).map((item, idx) => (
+              <li key={idx}>{item.title}</li>
+            ))}
+          </ul>
 
         <h2>Azure Wide & Deep</h2>
         <ul>{azureRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
