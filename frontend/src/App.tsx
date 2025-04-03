@@ -16,6 +16,7 @@ const App = () => {
   const [cfData, setCfData] = useState<CsvRec[]>([]);
   const [contentRecs, setContentRecs] = useState<string[]>([]);
   const [contentMatrix, setContentMatrix] = useState<string[][]>([]);
+  const [azureRecs, setAzureRecs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -47,7 +48,7 @@ const App = () => {
       .then((text) => setContentMatrix(parseMatrixCSV(text)));
   }, []);
 
-  const getRecommendations = () => {
+  const getRecommendations = async() => {
     setLoading(true);
     setError('');
     try {
@@ -75,6 +76,21 @@ const App = () => {
 
       setContentRecs(top5);
 
+      // Azure ML Prediction
+      const azureBody = { content_id: parseInt(contentIndex) };
+
+      const azureResponse = await fetch('https://YOUR_AZURE_ENDPOINT_URL', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer YOUR_API_KEY_HERE'
+        },
+        body: JSON.stringify(azureBody),
+      });
+
+      const azureJson = await azureResponse.json();
+      setAzureRecs(azureJson);
+
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please enter a valid number.');
@@ -92,7 +108,7 @@ const App = () => {
         value={contentIndex}
         onChange={(e) => setContentIndex(e.target.value)}
       />
-      <button className='btn btn-primary' onClick={getRecommendations}>
+      <button onClick={getRecommendations}>
         Get Recommendations
       </button>
 
@@ -100,10 +116,21 @@ const App = () => {
 
       <div>
         <h2>Collaborative Filtering</h2>
-        <ul>{cfRecs.map((id, idx) => <li key={idx}>{id}</li>)}</ul>
+        <p><strong>If you watched:</strong> {cfRecs[0]}</p>
+        <h5>Top Recommendations:</h5>
+       <ol>
+        
+        {cfRecs.slice(1).map((id, idx) => (
+          <li key={idx}>{id}</li>
+        ))}
+      </ol>
 
         <h2>Content-Based Filtering</h2>
-        <ul>{contentRecs.map((idx, id) => <li key={id}>{idx}</li>)}</ul>
+        <ol>{contentRecs.map((idx, id) => <li key={id}>{idx}</li>)}</ol>
+
+        <h2>Azure Wide & Deep Recommendations</h2>
+        <ol>{azureRecs.map((id, idx) => <li key={idx}>{id}</li>)}</ol>
+
       </div>
     </div>
   );
