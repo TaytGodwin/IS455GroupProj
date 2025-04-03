@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './App.css'
+import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 type CsvRec = {
@@ -23,7 +23,7 @@ const App = () => {
   const parseCSV = (csvText: string): CsvRec[] => {
     const lines = csvText.trim().split('\n');
     const headers = lines[0].split(',');
-    return lines.slice(1).map(line => {
+    return lines.slice(1).map((line) => {
       const values = line.split(',');
       const record: any = {};
       headers.forEach((header, i) => {
@@ -108,7 +108,7 @@ const App = () => {
         value={contentIndex}
         onChange={(e) => setContentIndex(e.target.value)}
       />
-      <button onClick={getRecommendations}>
+      <button className='btn btn-primary' onClick={getRecommendations}>
         Get Recommendations
       </button>
 
@@ -116,21 +116,13 @@ const App = () => {
 
       <div>
         <h2>Collaborative Filtering</h2>
-        <p><strong>If you watched:</strong> {cfRecs[0]}</p>
-        <h5>Top Recommendations:</h5>
-       <ol>
-        
-        {cfRecs.slice(1).map((id, idx) => (
-          <li key={idx}>{id}</li>
-        ))}
-      </ol>
+        <ul>{cfRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
 
         <h2>Content-Based Filtering</h2>
-        <ol>{contentRecs.map((idx, id) => <li key={id}>{idx}</li>)}</ol>
+        <ul>{contentRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
 
-        <h2>Azure Wide & Deep Recommendations</h2>
-        <ol>{azureRecs.map((id, idx) => <li key={idx}>{id}</li>)}</ol>
-
+        <h2>Azure Wide & Deep</h2>
+        <ul>{azureRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
       </div>
     </div>
   );
