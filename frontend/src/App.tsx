@@ -1,41 +1,68 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-type ContentRecommendation = {
-  similarity: number;
-  title: string;
+// When you upload, you'll have them called this ...  
+// import cfCSV from './data/cf_recs.csv';
+// import contentCSV from './data/content_recs.csv';
+
+type CsvRec = {
+  user_id: string;
+  rec_1: string;
+  rec_2: string;
+  rec_3: string;
+  rec_4: string;
+  rec_5: string;
 };
 
 const App = () => {
   const [userId, setUserId] = useState('');
-  const [cfRecs, setCfRecs] = useState([]);
-  const [contentRecs, setContentRecs] = useState<ContentRecommendation[]>([]);
-  const [azureRecs, setAzureRecs] = useState([]);
+  const [cfRecs, setCfRecs] = useState<string[]>([]);
+  const [contentRecs, setContentRecs] = useState<string[]>([]);
+  const [azureRecs, setAzureRecs] = useState<string[]>([]);
+  const [cfData, setCfData] = useState<CsvRec[]>([]);
+  const [contentData, setContentData] = useState<CsvRec[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Utility to load CSV from string to JSON
+  const parseCSV = (csvText: string): CsvRec[] => {
+    const lines = csvText.trim().split('\n');
+    const headers = lines[0].split(',');
+    return lines.slice(1).map(line => {
+      const values = line.split(',');
+      const record: any = {};
+      headers.forEach((header, i) => {
+        record[header] = values[i];
+      });
+      return record;
+    });
+  };
+
+  // Load CSVs on first render
+  useEffect(() => {
+    fetch(cfCSV)
+      .then((res) => res.text())
+      .then((text) => setCfData(parseCSV(text)));
+
+    fetch(contentCSV)
+      .then((res) => res.text())
+      .then((text) => setContentData(parseCSV(text)));
+  }, []);
 
   const getRecommendations = async () => {
     setLoading(true);
     setError('');
     try {
+      // Find CF and Content recs from CSVs
+      const cfRow = cfData.find((row) => row.user_id === userId);
+      const contentRow = contentData.find((row) => row.user_id === userId);
+
+      setCfRecs(cfRow ? Object.values(cfRow).slice(1) : []);
+      setContentRecs(contentRow ? Object.values(contentRow).slice(1) : []);
+
+      // Azure
       const body = { user_id: parseInt(userId) };
-      
-      // Collaborative Filtering
-      const cfRes = await fetch('http://localhost:8000/recommend-cf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      }).then((res) => res.json());
-
-      // Content-Based Filtering
-      const contentRes = await fetch('http://localhost:5000/recommend-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      }).then((res) => res.json());
-
-      // Azure ML Endpoint
       const azureRes = await fetch('https://YOUR_AZURE_ENDPOINT_URL', {
         method: 'POST',
         headers: {
@@ -45,8 +72,6 @@ const App = () => {
         body: JSON.stringify(body),
       }).then((res) => res.json());
 
-      setCfRecs(cfRes);
-      setContentRecs(contentRes);
       setAzureRecs(azureRes);
     } catch (err) {
       console.error(err);
@@ -65,24 +90,18 @@ const App = () => {
         value={userId}
         onChange={(e) => setUserId(e.target.value)}
       />
-      <button className='btn-primary'
-        onClick={getRecommendations}
-      >
+      <button className='btn btn-primary' onClick={getRecommendations}>
         Get Recommendations
-
       </button>
+
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
       <div>
-        {/* Masons section */}
         <h2>Collaborative Filtering</h2>
         <ul>{cfRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
-{/* Maya's  */}
 
         <h2>Content-Based Filtering</h2>
-          <ul>
-            {contentRecs.slice(0, 5).map((item, idx) => (
-              <li key={idx}>{item.title}</li>
-            ))}
-          </ul>
+        <ul>{contentRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
 
         <h2>Azure Wide & Deep</h2>
         <ul>{azureRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
