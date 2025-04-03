@@ -2,10 +2,6 @@ import { useState, useEffect } from 'react';
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-// When you upload, you'll have them called this ...  
-// import cfCSV from './data/cf_recs.csv';
-// import contentCSV from './data/content_recs.csv';
-
 type CsvRec = {
   user_id: string;
   rec_1: string;
@@ -40,11 +36,11 @@ const App = () => {
 
   // Load CSVs on first render
   useEffect(() => {
-    fetch(cfCSV)
+    fetch("Recommender/news_collaborative_recommendations.csv")
       .then((res) => res.text())
       .then((text) => setCfData(parseCSV(text)));
 
-    fetch(contentCSV)
+    fetch("Recommender/news_content_filtering_results.csv")
       .then((res) => res.text())
       .then((text) => setContentData(parseCSV(text)));
   }, []);
