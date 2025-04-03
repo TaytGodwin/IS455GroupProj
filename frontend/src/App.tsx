@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './App.css'
+import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 type CsvRec = {
@@ -24,7 +24,7 @@ const App = () => {
   const parseCSV = (csvText: string): CsvRec[] => {
     const lines = csvText.trim().split('\n');
     const headers = lines[0].split(',');
-    return lines.slice(1).map(line => {
+    return lines.slice(1).map((line) => {
       const values = line.split(',');
       const record: any = {};
       headers.forEach((header, i) => {
@@ -36,11 +36,11 @@ const App = () => {
 
   // Load CSVs on first render
   useEffect(() => {
-    fetch("Recommender/news_collaborative_recommendations.csv")
+    fetch('Recommender/news_collaborative_recommendations.csv')
       .then((res) => res.text())
       .then((text) => setCfData(parseCSV(text)));
 
-    fetch("Recommender/news_content_filtering_results.csv")
+    fetch('Recommender/news_content_filtering_results.csv')
       .then((res) => res.text())
       .then((text) => setContentData(parseCSV(text)));
   }, []);
@@ -58,14 +58,17 @@ const App = () => {
 
       // Azure
       const body = { user_id: parseInt(userId) };
-      const azureRes = await fetch('https://YOUR_AZURE_ENDPOINT_URL', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_API_KEY_HERE',
-        },
-        body: JSON.stringify(body),
-      }).then((res) => res.json());
+      const azureRes = await fetch(
+        'http://2bd92409-589d-46be-959c-76d6eaf53f46.eastus2.azurecontainer.io/score',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer cmCRPLiMB5N11an7fDqVKKix4ueRnKqs',
+          },
+          body: JSON.stringify(body),
+        }
+      ).then((res) => res.json());
 
       setAzureRecs(azureRes);
     } catch (err) {
@@ -84,7 +87,7 @@ const App = () => {
         value={userId}
         onChange={(e) => setUserId(e.target.value)}
       />
-      <button className='btn btn-primary' onClick={getRecommendations}>
+      <button className="btn btn-primary" onClick={getRecommendations}>
         Get Recommendations
       </button>
 
@@ -92,13 +95,25 @@ const App = () => {
 
       <div>
         <h2>Collaborative Filtering</h2>
-        <ul>{cfRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
+        <ul>
+          {cfRecs.map((id, idx) => (
+            <li key={idx}>Article ID: {id}</li>
+          ))}
+        </ul>
 
         <h2>Content-Based Filtering</h2>
-        <ul>{contentRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
+        <ul>
+          {contentRecs.map((id, idx) => (
+            <li key={idx}>Article ID: {id}</li>
+          ))}
+        </ul>
 
         <h2>Azure Wide & Deep</h2>
-        <ul>{azureRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
+        <ul>
+          {azureRecs.map((id, idx) => (
+            <li key={idx}>Article ID: {id}</li>
+          ))}
+        </ul>
       </div>
     </div>
   );
