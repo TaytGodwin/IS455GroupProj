@@ -14,7 +14,6 @@ type CsvRec = {
   rec_4: string;
   rec_5: string;
 };
-
 const App = () => {
   const [userId, setUserId] = useState('');
   const [cfRecs, setCfRecs] = useState<string[]>([]);
@@ -80,7 +79,6 @@ const App = () => {
       setLoading(false);
     }
   };
-
   return (
     <div>
       <h1>Article Recommendation System</h1>
@@ -109,5 +107,4 @@ const App = () => {
     </div>
   );
 };
-
 export default App;
