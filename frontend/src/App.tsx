@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import arrayofIds from './arrayofIds';
+
+// All content ids
+const content_id = arrayofIds();
 
 type CsvRec = {
   user_id: string;
@@ -56,8 +60,15 @@ const App = () => {
       setCfRecs(cfRow ? Object.values(cfRow).slice(1) : []);
       setContentRecs(contentRow ? Object.values(contentRow).slice(1) : []);
 
-      // Azure
-      const body = { user_id: parseInt(userId) };
+      const body = {
+        Inputs: {
+          WebServiceInput0: {
+            personId: userId,
+            contentId: content_id,
+          },
+        },
+      };
+
       const azureRes = await fetch(
         'http://2bd92409-589d-46be-959c-76d6eaf53f46.eastus2.azurecontainer.io/score',
         {
