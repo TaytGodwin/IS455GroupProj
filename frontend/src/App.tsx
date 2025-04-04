@@ -59,29 +59,6 @@ const App = () => {
 
       setCfRecs(cfRow ? Object.values(cfRow).slice(1) : []);
       setContentRecs(contentRow ? Object.values(contentRow).slice(1) : []);
-
-      const body = {
-        Inputs: {
-          WebServiceInput0: {
-            personId: userId,
-            contentId: content_id,
-          },
-        },
-      };
-
-      const azureRes = await fetch(
-        'http://2bd92409-589d-46be-959c-76d6eaf53f46.eastus2.azurecontainer.io/score',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer cmCRPLiMB5N11an7fDqVKKix4ueRnKqs',
-          },
-          body: JSON.stringify(body),
-        }
-      ).then((res) => res.json());
-
-      setAzureRecs(azureRes);
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please check your backend servers.');
@@ -89,17 +66,47 @@ const App = () => {
       setLoading(false);
     }
   };
+
+  const getAzureRecs = async () => {
+    const body = {
+      Inputs: {
+        WebServiceInput0: content_id.map((cid) => ({
+          personId: parseInt(userId),
+          contentId: cid,
+        })),
+      },
+    };
+
+    try {
+      const azureRes = await fetch('/api/score', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer cmCRPLiMB5N11an7fDqVKKix4ueRnKqs',
+        },
+        body: JSON.stringify(body),
+      }).then((res) => res.json());
+
+      setAzureRecs(azureRes['Results']['WebServiceOutput0'][0]);
+    } catch (err) {
+      console.error(err);
+      setError('Something went wrong. Please check your backend servers.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       <h1>Article Recommendation System</h1>
       <input
         type="number"
-        placeholder="Enter User ID"
+        placeholder="Enter Content ID"
         value={userId}
         onChange={(e) => setUserId(e.target.value)}
       />
       <button className="btn btn-primary" onClick={getRecommendations}>
-        Get Recommendations
+        Get Recommendations for items based on content Id
       </button>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -118,12 +125,22 @@ const App = () => {
             <li key={idx}>Article ID: {id}</li>
           ))}
         </ul>
+        <input
+          type="number"
+          placeholder="Enter User ID"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+        />
+        <button className="btn btn-primary" onClick={getAzureRecs}>
+          Get Recommendations for items based on user ID
+        </button>
 
         <h2>Azure Wide & Deep</h2>
         <ul>
-          {azureRecs.map((id, idx) => (
-            <li key={idx}>Article ID: {id}</li>
-          ))}
+          {azureRecs &&
+            Object.entries(azureRecs).map(([label, id]) => (
+              <li key={label}>Article ID: {id}</li>
+            ))}
         </ul>
       </div>
     </div>
