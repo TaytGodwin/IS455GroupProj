@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import arrayofIds from './arrayofIds';
+
+// All content ids
+const content_id = arrayofIds();
 
 type CsvRec = {
   rec_1: string;
@@ -76,21 +80,28 @@ const App = () => {
 
       setContentRecs(top5);
 
-      // Azure ML Prediction
-      const azureBody = { content_id: parseInt(contentIndex) };
-
-      const azureResponse = await fetch('https://YOUR_AZURE_ENDPOINT_URL', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_API_KEY_HERE'
+      const body = {
+        Inputs: {
+          WebServiceInput0: {
+            
+            contentId: content_id,
+          },
         },
-        body: JSON.stringify(azureBody),
-      });
+      };
 
-      const azureJson = await azureResponse.json();
-      setAzureRecs(azureJson);
+      const azureRes = await fetch(
+        'http://2bd92409-589d-46be-959c-76d6eaf53f46.eastus2.azurecontainer.io/score',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer cmCRPLiMB5N11an7fDqVKKix4ueRnKqs',
+          },
+          body: JSON.stringify(body),
+        }
+      ).then((res) => res.json());
 
+      setAzureRecs(azureRes);
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please enter a valid number.');
@@ -108,21 +119,27 @@ const App = () => {
         value={contentIndex}
         onChange={(e) => setContentIndex(e.target.value)}
       />
-      <button className='btn btn-primary' onClick={getRecommendations}>
+      <button onClick={getRecommendations}>
         Get Recommendations
       </button>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div>
-        <h2>Collaborative Filtering</h2>
-        <ul>{cfRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
-
+      <h2>Collaborative Filtering</h2>
+        <p><strong>If you watched:</strong> {cfRecs[0]}</p>
+        <h5>Top Recommendations:</h5>
+       <ol>
+        
+        {cfRecs.slice(1).map((id, idx) => (
+          <li key={idx}>{id}</li>
+        ))}
+      </ol>
         <h2>Content-Based Filtering</h2>
-        <ul>{contentRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
+        <ol>{contentRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ol>
 
         <h2>Azure Wide & Deep</h2>
-        <ul>{azureRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ul>
+        <ol>{azureRecs.map((id, idx) => <li key={idx}>Article ID: {id}</li>)}</ol>
       </div>
     </div>
   );
