@@ -50,22 +50,34 @@ const App = () => {
 
     fetch("/data/news_content_filtering_results.csv")
       .then((res) => res.text())
-      .then((text) => setContentData(parseCSV(text)));
-  }, [azureRecs]);
+      .then((text) => setContentMatrix(parseMatrixCSV(text)));
+  }, []);
 
-  const getRecommendations = async() => {
+  const getRecommendations = async () => {
     setLoading(true);
     setError('');
     try {
-      // Find CF and Content recs from CSVs
-      const cfRow = cfData.find((row) => row.user_id === userId);
-      const contentRow = contentData.find((row) => row.user_id === userId);
+      const index = parseInt(contentIndex);
 
-      setCfRecs(cfRow ? Object.values(cfRow).slice(1) : []);
-      setContentRecs(contentRow ? Object.values(contentRow).slice(1) : []);
+      // Collaborative Filtering
+      const cfRow = cfData[index];
+      setCfRecs(cfRow ? Object.values(cfRow) : []);
+
+      // Content-Based Filtering
+      const colValues: { similarity: number; index: number }[] = contentMatrix.map((row, rowIndex) => {
+        return { similarity: parseFloat(row[index]), index: rowIndex };
+      });
+
+      const top5 = colValues
+        .filter(row => row.index !== index && !isNaN(row.similarity))
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 5)
+        .map(row => row.index.toString());
+
+      setContentRecs(top5);
     } catch (err) {
       console.error(err);
-      setError('Something went wrong. Please check your backend servers.');
+      setError('Something went wrong. Please check your input.');
     } finally {
       setLoading(false);
     }
@@ -87,22 +99,20 @@ const App = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer TYjmuaCeCAwChga2meKn5UiZFEijsFzr',
+          'Authorization': 'Bearer TYjmuaCeCAwChga2meKn5UiZFEijsFzr',
         },
         body: JSON.stringify(body),
       }).then((res) => res.json());
-      const top5Items = [];
 
+      const top5Items = [];
       for (let i = 1; i <= 5; i++) {
-        const item =
-          azureRes['Results']['WebServiceOutput0'][0][`Recommended Item ${i}`];
+        const item = azureRes['Results']['WebServiceOutput0'][0][`Recommended Item ${i}`];
         if (item) top5Items.push(item);
       }
       setAzureRecs(top5Items);
-      console.log(top5Items);
     } catch (err) {
       console.error(err);
-      setError('Something went wrong. Please check your backend servers.');
+      setError('Something went wrong with the Azure ML request.');
     } finally {
       setLoading(false);
     }
@@ -111,51 +121,56 @@ const App = () => {
   return (
     <div>
       <h1>Article Recommendation System</h1>
+
       <input
         type="number"
-        placeholder="Enter Content ID"
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
+        placeholder="Enter Content Index"
+        value={contentIndex}
+        onChange={(e) => setContentIndex(e.target.value)}
       />
-      <button className="btn btn-primary" onClick={getRecommendations}>
-        Get Recommendations for items based on content Id
+      <button onClick={getRecommendations} disabled={loading}>
+        Get Recommendations
       </button>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div>
-      <h2>Collaborative Filtering</h2>
-        <p><strong>If you watched:</strong> {cfRecs[0]}</p>
-        <h5>Top Recommendations:</h5>
-       <ol>
-        
-        {cfRecs.slice(1).map((id, idx) => (
-          <li key={idx}>{id}</li>
-        ))}
-      </ol>
+        <h2>Collaborative Filtering</h2>
+        {cfRecs.length > 0 && (
+          <>
+            <p><strong>If you watched:</strong> {cfRecs[0]}</p>
+            <h5>Top Recommendations:</h5>
+            <ol>
+              {cfRecs.slice(1).map((id, idx) => (
+                <li key={idx}>{id}</li>
+              ))}
+            </ol>
+          </>
+        )}
+
         <h2>Content-Based Filtering</h2>
-        <ul>
+        <ol>
           {contentRecs.map((id, idx) => (
             <li key={idx}>Article ID: {id}</li>
           ))}
-        </ul>
+        </ol>
+
+        <h2>Azure Wide & Deep</h2>
         <input
           type="number"
           placeholder="Enter User ID"
           value={userForAzure}
           onChange={(e) => setUserForAzure(e.target.value)}
         />
-        <button className="btn btn-primary" onClick={getAzureRecs}>
-          Get Recommendations for items based on user ID
+        <button onClick={getAzureRecs} disabled={loading}>
+          Get Azure Recommendations
         </button>
 
-        <h2>Azure Wide & Deep</h2>
-        <ul>
-          {azureRecs &&
-            azureRecs.map((r, idx) => {
-              return <li key={idx}>Article ID: {r}</li>;
-            })}
-        </ul>
+        <ol>
+          {azureRecs.map((r, idx) => (
+            <li key={idx}>Article ID: {r}</li>
+          ))}
+        </ol>
       </div>
     </div>
   );
