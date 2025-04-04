@@ -16,6 +16,7 @@ type CsvRec = {
 };
 const App = () => {
   const [userId, setUserId] = useState('');
+  const [userForAzure, setUserForAzure] = useState('');
   const [cfRecs, setCfRecs] = useState<string[]>([]);
   const [contentRecs, setContentRecs] = useState<string[]>([]);
   const [azureRecs, setAzureRecs] = useState<string[]>([]);
@@ -71,7 +72,7 @@ const App = () => {
     const body = {
       Inputs: {
         WebServiceInput0: content_id.map((cid) => ({
-          User: userId,
+          User: userForAzure,
           Item: cid,
         })),
       },
@@ -136,8 +137,8 @@ const App = () => {
         <input
           type="number"
           placeholder="Enter User ID"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
+          value={userForAzure}
+          onChange={(e) => setUserForAzure(e.target.value)}
         />
         <button className="btn btn-primary" onClick={getAzureRecs}>
           Get Recommendations for items based on user ID
