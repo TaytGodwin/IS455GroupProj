@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target:
-          'http://2bd92409-589d-46be-959c-76d6eaf53f46.eastus2.azurecontainer.io',
+          'http://34222b8c-1ffa-4f29-83ac-4874b67c3df6.eastus2.azurecontainer.io',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

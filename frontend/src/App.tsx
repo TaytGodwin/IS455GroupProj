@@ -47,7 +47,7 @@ const App = () => {
     fetch('Recommender/news_content_filtering_results.csv')
       .then((res) => res.text())
       .then((text) => setContentData(parseCSV(text)));
-  }, []);
+  }, [azureRecs]);
 
   const getRecommendations = async () => {
     setLoading(true);
@@ -71,23 +71,31 @@ const App = () => {
     const body = {
       Inputs: {
         WebServiceInput0: content_id.map((cid) => ({
-          personId: parseInt(userId),
-          contentId: cid,
+          User: userId,
+          Item: cid,
         })),
       },
     };
 
     try {
+      setAzureRecs([]);
       const azureRes = await fetch('/api/score', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer cmCRPLiMB5N11an7fDqVKKix4ueRnKqs',
+          Authorization: 'Bearer TYjmuaCeCAwChga2meKn5UiZFEijsFzr',
         },
         body: JSON.stringify(body),
       }).then((res) => res.json());
+      const top5Items = [];
 
-      setAzureRecs(azureRes['Results']['WebServiceOutput0'][0]);
+      for (let i = 1; i <= 5; i++) {
+        const item =
+          azureRes['Results']['WebServiceOutput0'][0][`Recommended Item ${i}`];
+        if (item) top5Items.push(item);
+      }
+      setAzureRecs(top5Items);
+      console.log(top5Items);
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please check your backend servers.');
@@ -138,9 +146,9 @@ const App = () => {
         <h2>Azure Wide & Deep</h2>
         <ul>
           {azureRecs &&
-            Object.entries(azureRecs).map(([label, id]) => (
-              <li key={label}>Article ID: {id}</li>
-            ))}
+            azureRecs.map((r, idx) => {
+              return <li key={idx}>Article ID: {r}</li>;
+            })}
         </ul>
       </div>
     </div>
